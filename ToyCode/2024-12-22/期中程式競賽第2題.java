@@ -7,7 +7,14 @@ public class Main {
 
         while (scanner.hasNextInt()) {
             int n = scanner.nextInt();
-            scanner.nextLine();
+
+            if (n == 0) {
+                break;
+            }
+
+            if (caseNumber > 1) {
+                System.out.println();
+            }
 
             Stack<String> stack = new Stack<>();
             Queue<String> queue = new LinkedList<>();
@@ -18,25 +25,14 @@ public class Main {
 
             for (int i = 0; i < n; i++) {
                 String command = scanner.next();
-                String fruit = null;
-                if ("take".equals(command)) {
-                    fruit = scanner.next();
-                } else if ("throw".equals(command)) {
-                    fruit = scanner.next();
-                }
+                String fruit = scanner.next();
 
-                operations.append(String.format("(%d) cmd=%s", i + 1, command));
-                if (fruit != null) {
-                    operations.append(String.format(", fruit=%s", fruit));
-                }
-                operations.append("\n");
+                operations.append(String.format("(%d) cmd=%s, fruit=%s%n", i + 1, command, fruit));
 
                 if ("throw".equals(command)) {
-                    if (fruit != null) {
-                        if (isStack) stack.push(fruit);
-                        if (isQueue) queue.offer(fruit);
-                        if (isPriorityQueue) priorityQueue.offer(fruit);
-                    }
+                    if (isStack) stack.push(fruit);
+                    if (isQueue) queue.offer(fruit);
+                    if (isPriorityQueue) priorityQueue.offer(fruit);
                 } else if ("take".equals(command)) {
                     if (isStack) {
                         if (stack.isEmpty() || !stack.pop().equals(fruit)) {
@@ -58,42 +54,37 @@ public class Main {
 
             System.out.printf("Case #%d: there are %d operations.%n", caseNumber++, n);
             System.out.print(operations);
-         
-            StringBuilder result = new StringBuilder();
-            if (!isStack) result.append("It is NOT a Stack.\n");
-            else result.append("It is a Stack.\n");
 
-            if (!isQueue) result.append("It is NOT a Queue.\n");
-            else result.append("It is a Queue.\n");
+            StringBuilder resultDetails = new StringBuilder();
+            if (!isStack) resultDetails.append("It is NOT a Stack.\n");
+            else resultDetails.append("It is a Stack.\n");
 
-            if (!isPriorityQueue) result.append("It is NOT a Max Priority Queue.\n");
-            else result.append("It is a Max Priority Queue.\n");
+            if (!isQueue) resultDetails.append("It is NOT a Queue.\n");
+            else resultDetails.append("It is a Queue.\n");
 
-            if (!isStack && !isQueue && !isPriorityQueue) {
-                result.append("impossible");
-            } else if (isStack && isQueue && isPriorityQueue) {
-                result.append("not sure: stack, queue or priority queue");
-            } else if (isStack && isQueue) {
-                result.append("not sure: stack or queue");
-            } else if (isStack && isPriorityQueue) {
-                result.append("not sure: stack or priority queue");
-            } else if (isQueue && isPriorityQueue) {
-                result.append("not sure: queue or priority queue");
-            } else if (isStack) {
-                result.append("stack");
-            } else if (isQueue) {
-                result.append("queue");
-            } else if (isPriorityQueue) {
-                result.append("priority queue");
-            }
+            if (!isPriorityQueue) resultDetails.append("It is NOT a Max Priority Queue.\n");
+            else resultDetails.append("It is a Max Priority Queue.\n");
 
-            System.out.printf(result.toString());
+            System.out.print(resultDetails);
 
-            if (scanner.hasNextInt()) {
-                System.out.println("\n");
+            String finalResult;
+            int trueCount = (isStack ? 1 : 0) + (isQueue ? 1 : 0) + (isPriorityQueue ? 1 : 0);
+
+            if (trueCount == 0) {
+                finalResult = "impossible";
+            } else if (trueCount == 1) {
+                if (isStack) finalResult = "stack";
+                else if (isQueue) finalResult = "queue";
+                else finalResult = "priority queue";
+            } else if (trueCount == 2) {
+                if (isStack && isQueue) finalResult = "not sure: stack or queue";
+                else if (isStack && isPriorityQueue) finalResult = "not sure: stack or priority queue";
+                else finalResult = "not sure: queue or priority queue";
             } else {
-                System.out.println();
+                finalResult = "not sure: stack, queue or priority queue";
             }
+
+            System.out.println(finalResult);
         }
 
         scanner.close();
