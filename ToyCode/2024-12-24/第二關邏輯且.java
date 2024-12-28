@@ -1,12 +1,13 @@
 import java.util.*;
 
-public class BooleanExpression1 {
+public class BooleanExpression2 {
 
-    private static int caseNumber = 1; 
+    private static int caseNumber = 1;
     private static int evaluationStep = 1;
-    private static final int MAX_EXPR_LENGTH = 48; 
-    private static final int PREFIX_LENGTH = 40; 
-    private static final int SUFFIX_LENGTH = 6; 
+    private static final int MAX_EXPR_LENGTH = 48;
+    private static final int SKIP_EXPR_MAX_LENGTH = 32;
+    private static final int PREFIX_LENGTH = 24;
+    private static final int SUFFIX_LENGTH = 6;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -44,13 +45,28 @@ public class BooleanExpression1 {
 
     private static boolean evaluate(String expr, StringBuilder output) {
         expr = expr.trim();
+
         if (expr.equals("t")) return true;
         if (expr.equals("f")) return false;
 
-        if (expr.startsWith("!")) {
-            String subExpr = extractInnerExpression(expr, 1);
-            boolean result = !evaluate(subExpr, output);
-            logEvaluation("Not", expr, result, subExpr, output);
+        if (expr.startsWith("&")) {
+            String innerExpr = extractInnerExpression(expr, 1);
+            String[] terms = splitTerms(innerExpr);
+            boolean result = true;
+            StringBuilder skippedExpr = new StringBuilder();
+
+            for (int i = 0; i < terms.length; i++) {
+                boolean termResult = evaluate(terms[i].trim(), output);
+                if (!termResult) {
+                    result = false;
+                    if (i + 1 < terms.length) {
+                        skippedExpr.append(String.join(",", Arrays.copyOfRange(terms, i + 1, terms.length)));
+                    }
+                    break;
+                }
+            }
+
+            logEvaluation("And", expr, result, skippedExpr.toString(), output);
             return result;
         }
 
@@ -58,14 +74,27 @@ public class BooleanExpression1 {
     }
 
     private static void logEvaluation(String operator, String expr, boolean result, String skippedExpr, StringBuilder output) {
-        String displayedExpr = truncateExpression(expr);
+        String displayedExpr = truncateExpression(expr, MAX_EXPR_LENGTH);
         output.append("(").append(evaluationStep++).append(") parse").append(operator).append("Expr: ")
               .append("\"").append(displayedExpr).append("\" => ").append(result ? "t" : "f");
+
+        if (!skippedExpr.isEmpty()) {
+            String correctedSkipExpr = truncateSkipExpression(skippedExpr, SKIP_EXPR_MAX_LENGTH);
+            output.append(" with skipExpr: \"").append(correctedSkipExpr).append("\"");
+        }
+
         output.append("\n");
     }
 
-    private static String truncateExpression(String expr) {
-        if (expr.length() <= MAX_EXPR_LENGTH) {
+    private static String truncateExpression(String expr, int maxLength) {
+        if (expr.length() <= maxLength) {
+            return expr;
+        }
+        return expr.substring(0, maxLength - SUFFIX_LENGTH - 3) + "..." + expr.substring(expr.length() - SUFFIX_LENGTH);
+    }
+
+    private static String truncateSkipExpression(String expr, int maxLength) {
+        if (expr.length() <= maxLength) {
             return expr;
         }
         return expr.substring(0, PREFIX_LENGTH) + "..." + expr.substring(expr.length() - SUFFIX_LENGTH);
@@ -79,5 +108,27 @@ public class BooleanExpression1 {
             if (openParentheses == 0) return expr.substring(startIndex + 1, i).trim();
         }
         throw new IllegalArgumentException("Unmatched parentheses in: " + expr);
+    }
+
+    private static String[] splitTerms(String expr) {
+        List<String> terms = new ArrayList<>();
+        int openParentheses = 0;
+        StringBuilder currentTerm = new StringBuilder();
+
+        for (char c : expr.toCharArray()) {
+            if (c == ',' && openParentheses == 0) {
+                terms.add(currentTerm.toString());
+                currentTerm.setLength(0);
+            } else {
+                if (c == '(') openParentheses++;
+                if (c == ')') openParentheses--;
+                currentTerm.append(c);
+            }
+        }
+        if (currentTerm.length() > 0) {
+            terms.add(currentTerm.toString());
+        }
+
+        return terms.toArray(new String[0]);
     }
 }
