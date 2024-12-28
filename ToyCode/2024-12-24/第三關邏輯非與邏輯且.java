@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class BooleanExpression2 {
+public class BooleanExpression3 {
 
     private static int caseNumber = 1;
     private static int evaluationStep = 1;
@@ -19,7 +19,7 @@ public class BooleanExpression2 {
 
             evaluationStep = 1;
             if (!results.isEmpty()) {
-                results.add(""); // Add a blank line between cases
+                results.add(""); 
             }
             results.add("Case #" + caseNumber + ":");
             results.add(parseAndEvaluate(expression));
@@ -46,11 +46,16 @@ public class BooleanExpression2 {
     private static boolean evaluate(String expr, StringBuilder output) {
         expr = expr.trim();
 
-        // Base cases
         if (expr.equals("t")) return true;
         if (expr.equals("f")) return false;
 
-        // Handle AND operator
+        if (expr.startsWith("!")) {
+            String innerExpr = extractInnerExpression(expr, 1);
+            boolean result = !evaluate(innerExpr, output);
+            logEvaluation("Not", expr, result, "", output);
+            return result;
+        }
+
         if (expr.startsWith("&")) {
             String innerExpr = extractInnerExpression(expr, 1);
             String[] terms = splitTerms(innerExpr);
@@ -80,7 +85,6 @@ public class BooleanExpression2 {
         output.append("(").append(evaluationStep++).append(") parse").append(operator).append("Expr: ")
               .append("\"").append(displayedExpr).append("\" => ").append(result ? "t" : "f");
 
-        // Handle skipped expression
         if (!skippedExpr.isEmpty()) {
             String correctedSkipExpr = truncateSkipExpression(skippedExpr, SKIP_EXPR_MAX_LENGTH);
             output.append(" with skipExpr: \"").append(correctedSkipExpr).append("\"");
